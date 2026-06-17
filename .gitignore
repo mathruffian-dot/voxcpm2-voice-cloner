@@ -1,0 +1,39 @@
+# .gitignore
+
+# Python 虛擬環境
+.venv/
+venv/
+
+# 模型權重（太大，不進 repo）
+checkpoints/
+pretrained_models/
+*.safetensors
+*.pth
+
+# 音檔（使用者個人資料，不進 repo）
+ref_voice.wav
+*.wav
+output/
+
+# GPU 類型標記
+.gpu_type
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# 系統
+desktop.ini
+*.tmp
+~$*
+.DS_Store
+Thumbs.db
+
+# 敏感資料
+.env
+*.key
+credentials.*
