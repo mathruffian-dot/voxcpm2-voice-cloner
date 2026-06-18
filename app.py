@@ -290,7 +290,7 @@ def build_ui():
                     )
 
                 with gr.Column(elem_classes="step-box"):
-                    gr.Markdown("## 🎤 開始錄音")
+                    gr.Markdown("## 🎤 錄音並儲存")
                     gr.Markdown("按下面這個按鈕開始錄音，念完按停止。")
 
                     audio_mic = gr.Audio(
@@ -300,7 +300,15 @@ def build_ui():
                         show_label=False,
                     )
 
-                    with gr.Accordion("或上傳已錄好的音檔", open=False):
+                    gr.Markdown(
+                        '<div style="text-align:center; margin-top:12px;">'
+                        '👆 錄完後，按下面這個按鈕儲存 👇'
+                        '</div>'
+                    )
+                    with gr.Row():
+                        save_btn = gr.Button("⬇️ 儲存聲音", variant="primary", size="lg")
+
+                    with gr.Accordion("或上傳已錄好的音檔（如果有麥克風問題）", open=False):
                         gr.Markdown("如果你已經用其他方式錄好聲音，可以直接上傳 WAV 或 MP3 檔。")
                         audio_upload = gr.Audio(
                             label="",
@@ -309,8 +317,6 @@ def build_ui():
                             show_label=False,
                         )
 
-                with gr.Row():
-                    save_btn = gr.Button("儲存聲音", variant="primary", size="lg")
                 save_msg = gr.Textbox(label="", show_label=False, lines=3, interactive=False)
 
                 save_btn.click(
