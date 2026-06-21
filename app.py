@@ -40,26 +40,54 @@ def load_sample_text():
     return ""
 
 
+def preprocess_audio(audio):
+    audio = np.asarray(audio, dtype=np.float32)
+    if len(audio) == 0:
+        return audio, 0.0
+
+    # Remove constant microphone offset, then trim only leading/trailing silence.
+    audio = audio - float(np.mean(audio))
+    peak = float(np.abs(audio).max())
+    if peak <= 0:
+        return audio, peak
+
+    threshold = max(peak * 0.015, 0.003)
+    voiced = np.flatnonzero(np.abs(audio) > threshold)
+    if voiced.size:
+        pad = int(SAMPLE_RATE * 0.2)
+        start = max(0, int(voiced[0]) - pad)
+        end = min(len(audio), int(voiced[-1]) + pad)
+        audio = audio[start:end]
+        peak = float(np.abs(audio).max())
+
+    if peak > 0:
+        audio = audio / peak * 0.95
+    return audio, peak
+
+
 def on_save(audio_mic, audio_upload, voice_name):
     audio_data = audio_mic or audio_upload
     if audio_data is None:
-        return "⚠️ 請先按「開始錄音」錄下你的聲音。"
+        return "⚠️ 请先按“开始录音”录下你的声音。"
     if not voice_name or not voice_name.strip():
-        return "⚠️ 請為你的聲音取一個名字。"
+        return "⚠️ 请为你的声音取一个名字。"
 
     name = voice_name.strip()
     try:
-        sr, audio = audio_data
+        if isinstance(audio_data, (str, os.PathLike)):
+            import soundfile as sf
+            audio, sr = sf.read(audio_data)
+        else:
+            sr, audio = audio_data
+
         if audio.ndim > 1:
             audio = audio.mean(axis=1)
         if sr != SAMPLE_RATE:
             import resampy
             audio = resampy.resample(audio, sr, SAMPLE_RATE)
-        peak = np.abs(audio).max()
+        audio, peak = preprocess_audio(audio)
         if peak > 0 and peak < 0.01:
-            return "⚠️ 錄到的音量太小，請靠近麥克風再錄一次。"
-        if peak > 0:
-            audio = audio / peak * 0.95
+            return "⚠️ 录到的音量太小，请靠近麦克风再录一次。"
 
         vdir = os.path.join(REPO_DIR, "voices", name)
         os.makedirs(vdir, exist_ok=True)
@@ -72,53 +100,66 @@ def on_save(audio_mic, audio_upload, voice_name):
         existing = list_voices()
         voice_list = "、".join(existing)
         return (
-            f"✅ 聲音「{name}」錄製成功！（{duration:.0f} 秒）\n\n"
-            f"目前已錄製的聲音：{voice_list}\n\n"
-            f"👉 接下來，你可以對 AI 說：\n"
-            f"「 用 {name} 的聲音說一段話 」"
+            f"✅ 声音“{name}”录制成功！（{duration:.0f} 秒）\n\n"
+            f"目前已录制的声音：{voice_list}\n\n"
+            f"👉 接下来，你可以对 AI 说：\n"
+            f"“用 {name} 的声音说一段话”"
         )
     except Exception as e:
-        return f"❌ 儲存失敗：{e}"
+        return f"❌ 保存失败：{e}"
 
 
 def build_ui():
     sample_text = load_sample_text()
 
-    with gr.Blocks(title="VoxCPM2 錄音工具", css=CUSTOM_CSS) as app:
+    with gr.Blocks(title="VoxCPM2 录音工具", css=CUSTOM_CSS) as app:
         gr.HTML("""
         <div style="text-align:center; margin-bottom:24px;">
-          <h1 style="font-size:2em; margin-bottom:4px;">🎙️ VoxCPM2 語音錄製</h1>
-          <p style="font-size:1.05em; color:#666;">錄下你的聲音，後續由 AI 幫你生成任何語音。</p>
+          <h1 style="font-size:2em; margin-bottom:4px;">🎙️ VoxCPM2 语音录制</h1>
+          <p style="font-size:1.05em; color:#666;">录下你的声音，后续由 AI 帮你生成语音。</p>
         </div>
         """)
 
         with gr.Column(elem_classes="step-box"):
-            gr.Markdown("## ✏️ 為聲音取名字")
+            gr.Markdown("## ✏️ 为声音取名字")
             voice_name_input = gr.Textbox(
                 label="",
-                placeholder="例如：王老師、林主任...",
+                placeholder="例如：王老师、林主任...",
                 show_label=False,
             )
 
         with gr.Column(elem_classes="step-box"):
-            gr.Markdown("## 📖 請念這段文字")
+            gr.Markdown("## 📖 请念这段文字")
             gr.HTML(
                 f'<div style="background:#fff3cd; padding:16px; border-radius:8px; '
                 f'font-size:1.1em; line-height:2; margin:8px 0;">{sample_text}</div>'
             )
 
         with gr.Column(elem_classes="step-box"):
-            gr.Markdown("## 🎤 錄音並儲存")
-            audio_mic = gr.Audio(label="", type="numpy", sources=["microphone"], show_label=False)
+            gr.Markdown("## 🎤 录音并保存")
+            audio_mic = gr.Audio(
+                label="",
+                type="filepath",
+                sources=["microphone"],
+                show_label=False,
+                format="wav",
+                waveform_options=gr.WaveformOptions(show_recording_waveform=True),
+            )
 
             gr.HTML('<div style="text-align:center; margin-top:8px;">'
-                    '👆 錄完後按這裡儲存 👇</div>')
+                    '👆 录完后按这里保存 👇</div>')
 
             with gr.Row():
-                save_btn = gr.Button("⬇️ 儲存聲音", variant="primary", size="lg")
+                save_btn = gr.Button("⬇️ 保存声音", variant="primary", size="lg")
 
-            with gr.Accordion("或上傳已錄好的音檔", open=False):
-                audio_upload = gr.Audio(label="", type="numpy", sources=["upload"], show_label=False)
+            with gr.Accordion("或上传已录好的音频", open=False):
+                audio_upload = gr.Audio(
+                    label="",
+                    type="filepath",
+                    sources=["upload"],
+                    show_label=False,
+                    format="wav",
+                )
 
         save_msg = gr.Textbox(label="", show_label=False, lines=5, interactive=False)
 
@@ -130,7 +171,7 @@ def build_ui():
 
         gr.HTML("""
         <div style="text-align:center; margin-top:24px; padding:12px; color:#999; font-size:0.85em;">
-        VoxCPM2（Apache-2.0 可商用） |
+        VoxCPM2（Apache-2.0，可商用） |
         <a href="https://github.com/mathruffian-dot/voxcpm2-voice-cloner" target="_blank">GitHub</a>
         </div>
         """)

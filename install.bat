@@ -27,7 +27,12 @@ echo Python 已就緒，開始安裝...
 echo.
 
 :: ========== 執行安裝腳本 ==========
-powershell.exe -ExecutionPolicy Bypass -File "install.ps1"
+where pwsh >nul 2>&1
+if errorlevel 1 (
+    powershell.exe -ExecutionPolicy Bypass -File "install.ps1"
+) else (
+    pwsh -ExecutionPolicy Bypass -File "install.ps1"
+)
 
 if errorlevel 1 (
     echo.
