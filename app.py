@@ -40,6 +40,31 @@ def load_sample_text():
     return ""
 
 
+def preprocess_audio(audio):
+    audio = np.asarray(audio, dtype=np.float32)
+    if len(audio) == 0:
+        return audio, 0.0
+
+    # Remove constant microphone offset, then trim only leading/trailing silence.
+    audio = audio - float(np.mean(audio))
+    peak = float(np.abs(audio).max())
+    if peak <= 0:
+        return audio, peak
+
+    threshold = max(peak * 0.015, 0.003)
+    voiced = np.flatnonzero(np.abs(audio) > threshold)
+    if voiced.size:
+        pad = int(SAMPLE_RATE * 0.2)
+        start = max(0, int(voiced[0]) - pad)
+        end = min(len(audio), int(voiced[-1]) + pad)
+        audio = audio[start:end]
+        peak = float(np.abs(audio).max())
+
+    if peak > 0:
+        audio = audio / peak * 0.95
+    return audio, peak
+
+
 def on_save(audio_mic, audio_upload, voice_name):
     audio_data = audio_mic or audio_upload
     if audio_data is None:
@@ -49,17 +74,20 @@ def on_save(audio_mic, audio_upload, voice_name):
 
     name = voice_name.strip()
     try:
-        sr, audio = audio_data
+        if isinstance(audio_data, (str, os.PathLike)):
+            import soundfile as sf
+            audio, sr = sf.read(audio_data)
+        else:
+            sr, audio = audio_data
+
         if audio.ndim > 1:
             audio = audio.mean(axis=1)
         if sr != SAMPLE_RATE:
             import resampy
             audio = resampy.resample(audio, sr, SAMPLE_RATE)
-        peak = np.abs(audio).max()
+        audio, peak = preprocess_audio(audio)
         if peak > 0 and peak < 0.01:
             return "⚠️ 錄到的音量太小，請靠近麥克風再錄一次。"
-        if peak > 0:
-            audio = audio / peak * 0.95
 
         vdir = os.path.join(REPO_DIR, "voices", name)
         os.makedirs(vdir, exist_ok=True)
@@ -109,7 +137,14 @@ def build_ui():
 
         with gr.Column(elem_classes="step-box"):
             gr.Markdown("## 🎤 錄音並儲存")
-            audio_mic = gr.Audio(label="", type="numpy", sources=["microphone"], show_label=False)
+            audio_mic = gr.Audio(
+                label="",
+                type="filepath",
+                sources=["microphone"],
+                show_label=False,
+                format="wav",
+                waveform_options=gr.WaveformOptions(show_recording_waveform=True),
+            )
 
             gr.HTML('<div style="text-align:center; margin-top:8px;">'
                     '👆 錄完後按這裡儲存 👇</div>')
@@ -118,7 +153,13 @@ def build_ui():
                 save_btn = gr.Button("⬇️ 儲存聲音", variant="primary", size="lg")
 
             with gr.Accordion("或上傳已錄好的音檔", open=False):
-                audio_upload = gr.Audio(label="", type="numpy", sources=["upload"], show_label=False)
+                audio_upload = gr.Audio(
+                    label="",
+                    type="filepath",
+                    sources=["upload"],
+                    show_label=False,
+                    format="wav",
+                )
 
         save_msg = gr.Textbox(label="", show_label=False, lines=5, interactive=False)
 

@@ -13,6 +13,22 @@ $venvName = '.venv'
 $venvPython = Join-Path $venvName 'Scripts\python.exe'
 $venvPip = Join-Path $venvName 'Scripts\pip.exe'
 
+# Prefer the official per-user Python install over the Microsoft Store alias.
+$pythonCandidates = @(
+    (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312'),
+    (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python311'),
+    (Join-Path $env:LOCALAPPDATA 'Programs\Python\Python310')
+)
+foreach ($pythonRoot in $pythonCandidates) {
+    $pythonExe = Join-Path $pythonRoot 'python.exe'
+    $pythonScripts = Join-Path $pythonRoot 'Scripts'
+    if (Test-Path $pythonExe) {
+        $env:PATH = "$pythonRoot;$pythonScripts;$env:PATH"
+        break
+    }
+}
+$pythonForPip = (Get-Command python -ErrorAction SilentlyContinue).Source
+
 Write-Host ''
 Write-Host '============================================' -ForegroundColor Cyan
 Write-Host '  VoxCPM2 Voice Cloner - Auto Installer' -ForegroundColor Cyan
@@ -24,7 +40,10 @@ Write-Host '[1/6] 檢查 uv 套件管理器...' -ForegroundColor Yellow
 $uv = Get-Command uv -ErrorAction SilentlyContinue
 if (-not $uv) {
     Write-Host '  uv 未安裝，正在安裝...' -ForegroundColor Yellow
-    pip install -U uv
+    if (-not $pythonForPip) {
+        throw '找不到可用的 Python。請先安裝 Python 3.10–3.12。'
+    }
+    & $pythonForPip -m pip install -U uv
 } else {
     Write-Host "  uv 已安裝: $($uv.Source)" -ForegroundColor Green
 }
