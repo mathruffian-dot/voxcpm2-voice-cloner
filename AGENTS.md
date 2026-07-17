@@ -2,6 +2,13 @@
 
 本專案提供三個工具，Agent 應根據使用者自然語言指令自動選用。
 
+## 首次設定
+
+- Windows 10/11：執行 `install.bat` 或 `install.ps1`。
+- Apple Silicon macOS：執行 `install_mac.command`。
+- 完整跨平台說明：`docs/VOICE_CLONING_GUIDE.md`。
+- 開始前必須確認聲音本人已同意被克隆；不得用於冒充、詐騙或誤導。
+
 ## 工具清單
 
 ### 1. clone.py — 用已錄製的聲音生成語音
@@ -44,10 +51,17 @@ python record.py --voice <聲音名稱>
 
 ## 裝置偵測
 
-執行 clone.py 或 dialogue.py 時會自動偵測裝置：
+執行 clone.py 時會自動偵測裝置：
 - NVIDIA GPU → CUDA 模式
 - Intel Arc GPU → XPU 模式（需 patch，install.ps1 已處理）
+- Apple Silicon → MPS 模式；記憶體不足時使用 `VOXCPM_MPS_DTYPE=float16`
 - 無獨顯 → CPU 模式（較慢）
+
+macOS MPS 範例：
+
+```bash
+VOXCPM_MPS_DTYPE=float16 .venv/bin/python clone.py "要生成的文字" --voice "聲音名稱" --device mps
+```
 
 ## 常見使用者指令對照
 
