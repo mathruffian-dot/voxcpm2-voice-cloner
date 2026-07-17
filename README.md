@@ -25,6 +25,15 @@
 
 ## 快速開始（雙擊即可）
 
+### macOS Apple Silicon
+
+1. 雙擊 `install_mac.command` 安裝 Python 3.12 與相依套件。
+2. 雙擊 `start_mac.command` 啟動錄音介面。
+3. 在瀏覽器開啟 `http://127.0.0.1:7860`。
+4. 完整流程與 AI Agent 用法請見 [`docs/MACOS_VOICE_CLONING.md`](docs/MACOS_VOICE_CLONING.md)。
+
+聲音樣本與生成音檔均由 `.gitignore` 排除，不會上傳到 GitHub。
+
 ### 1. 安裝
 
 雙擊 `install.bat`（或 `install.ps1`）。自動完成所有設定。

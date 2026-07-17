@@ -31,10 +31,12 @@ def detect_device():
             gpu_type = 'cuda'
         elif hasattr(torch, 'xpu') and torch.xpu.is_available():
             gpu_type = 'xpu'
+        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+            gpu_type = 'mps'
         else:
             gpu_type = 'cpu'
 
-    device_map = {'cuda': 'cuda', 'xpu': 'xpu', 'cpu': 'cpu'}
+    device_map = {'cuda': 'cuda', 'xpu': 'xpu', 'mps': 'mps', 'cpu': 'cpu'}
     return device_map.get(gpu_type, 'cpu')
 
 
@@ -58,7 +60,7 @@ def main():
                         help='覆蓋參考音檔路徑（預設由 --voice 決定）')
     parser.add_argument('--text-file', '-t',
                         help='覆蓋逐字稿檔案路徑（預設由 --voice 決定）')
-    parser.add_argument('--device', '-d', help='強制指定裝置 (cuda/xpu/cpu)')
+    parser.add_argument('--device', '-d', help='強制指定裝置 (cuda/xpu/mps/cpu)')
     args = parser.parse_args()
 
     # 取得要生成的文字
