@@ -6,7 +6,7 @@
 
 ## 特色
 
-- **自動偵測 GPU**：NVIDIA CUDA / Intel Arc XPU / CPU 三種模式自動切換
+- **自動偵測 GPU**：NVIDIA CUDA / Intel Arc XPU / Apple MPS / CPU 模式
 - ** Ultimate Cloning**：同時使用參考音 + 逐字稿，連語氣節奏都一起複製
 - **網頁錄音**：`app.py` 提供簡潔錄音介面（取名 → 看稿 → 錄音 → 儲存）
 - **自然語言操作**：錄完後，直接對 AI Agent 說「用王老師的聲音說一段話」，Agent 自動呼叫工具
@@ -14,16 +14,34 @@
 
 ## 系統需求
 
-- Windows 10/11（Linux/Mac 可自行調整 install 腳本）
+- Windows 10/11 或 Apple Silicon macOS
 - Python 3.10–3.12（安裝腳本會用 uv 自動建立 3.12 環境）
 - 顯卡（擇一）：
   - NVIDIA GPU（CUDA 12+，約 8GB VRAM）
   - Intel Arc GPU（XPU，約 8GB VRAM，需自動 patch）
+  - Apple Silicon（MPS，建議至少 16GB 統一記憶體）
   - 無獨顯也可用 CPU（較慢，RTF 約 8x）
 - 約 5GB 硬碟空間（模型權重）
 - 麥克風
 
 ## 快速開始（雙擊即可）
+
+完整的 Windows、macOS 與 AI Agent 操作方式請見 [`docs/VOICE_CLONING_GUIDE.md`](docs/VOICE_CLONING_GUIDE.md)。
+
+### Windows 10/11
+
+1. 雙擊 `install.bat`（或執行 `install.ps1`）安裝環境並自動偵測 CUDA、Intel XPU 或 CPU。
+2. 雙擊 `start.bat` 啟動錄音介面。
+3. 在瀏覽器開啟 `http://127.0.0.1:7860`。
+
+### macOS Apple Silicon
+
+1. 雙擊 `install_mac.command` 安裝 Python 3.12 與相依套件。
+2. 雙擊 `start_mac.command` 啟動錄音介面。
+3. 在瀏覽器開啟 `http://127.0.0.1:7860`。
+4. 依照跨平台指南使用 Apple MPS 或 CPU 生成語音。
+
+聲音樣本與生成音檔均由 `.gitignore` 排除，不會上傳到 GitHub。
 
 ### 1. 安裝
 

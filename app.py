@@ -84,7 +84,7 @@ def on_save(audio_mic, audio_upload, voice_name):
 def build_ui():
     sample_text = load_sample_text()
 
-    with gr.Blocks(title="VoxCPM2 錄音工具", css=CUSTOM_CSS) as app:
+    with gr.Blocks(title="VoxCPM2 錄音工具") as app:
         gr.HTML("""
         <div style="text-align:center; margin-bottom:24px;">
           <h1 style="font-size:2em; margin-bottom:4px;">🎙️ VoxCPM2 語音錄製</h1>
@@ -143,4 +143,9 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("--port", "-p", type=int, default=7860)
     args = p.parse_args()
-    build_ui().launch(server_port=args.port, theme=gr.themes.Soft())
+    build_ui().launch(
+        server_port=args.port,
+        theme=gr.themes.Soft(),
+        css=CUSTOM_CSS,
+        inbrowser=False,
+    )
