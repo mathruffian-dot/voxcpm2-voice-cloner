@@ -25,8 +25,8 @@ python clone.py "同學們早安，今天我們來上數學課。" --voice 王�
 python dialogue.py
 ```
 
-- 預設使用 `三師爸` 和 `三帥媽` 的聲音
-- 輸出：`output/dialogue_三師爸_三帥媽.wav`
+- 預設用 `voices/` 內的前兩個聲音（用 `--a`、`--b` 指定聲音名；`voices/` 不進版控，請先自行錄製或用 voice design 生成）
+- 輸出：`output/dialogue_<A>_<B>.wav`
 - 若要自訂對話內容，編輯 `dialogue.py` 中的 `dialogue` 清單
 
 ### 3. record.py — 命令列錄音（無 UI 備案）
